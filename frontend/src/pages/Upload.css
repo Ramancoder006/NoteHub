@@ -1,0 +1,240 @@
+
+.nh-upload-page {
+  min-height: 100vh;
+  padding: 65px 20px 90px;
+  background: linear-gradient(145deg, #f8faff, #f3f0ff);
+}
+
+.nh-upload-container {
+  max-width: 1100px;
+  margin: auto;
+}
+
+.nh-upload-heading {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.nh-eyebrow {
+  color: #6366f1;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.nh-upload-heading h1 {
+  font-size: clamp(32px, 4vw, 46px);
+  letter-spacing: -1.5px;
+  margin: 12px 0;
+}
+
+.nh-upload-heading p {
+  color: #64748b;
+  line-height: 1.7;
+}
+
+.nh-upload-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(250px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.nh-upload-card,
+.nh-tip-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 12px 35px rgba(15, 23, 42, .05);
+}
+
+.nh-upload-card {
+  padding: 35px;
+}
+
+.nh-card-heading {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.nh-heading-icon,
+.nh-tip-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  background: #eef2ff;
+  border-radius: 14px;
+  font-size: 24px;
+}
+
+.nh-card-heading h2 {
+  margin: 0 0 5px;
+  font-size: 22px;
+}
+
+.nh-card-heading p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.nh-field {
+  margin-bottom: 22px;
+  min-width: 0;
+}
+
+.nh-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 9px;
+}
+
+.nh-field input,
+.nh-field select,
+.nh-field textarea {
+  width: 100%;
+  padding: 13px 15px;
+  border: 1px solid #dbe2ea;
+  border-radius: 10px;
+  background: #fff;
+  color: #1e293b;
+  outline: none;
+}
+
+.nh-field input:focus,
+.nh-field select:focus,
+.nh-field textarea:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px #eef2ff;
+}
+
+.nh-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.nh-dropzone {
+  padding: 35px 18px;
+  border: 2px dashed #c7d2fe;
+  border-radius: 14px;
+  text-align: center;
+  background: #f8faff;
+  transition: .2s;
+}
+
+.nh-dragging {
+  background: #eef2ff;
+  border-color: #4f46e5;
+}
+
+.nh-drop-icon {
+  font-size: 35px;
+  margin-bottom: 12px;
+}
+
+.nh-dropzone h3 {
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.nh-dropzone p {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 22px;
+}
+
+.nh-file-picker {
+  display: inline-block !important;
+  width: auto;
+  padding: 11px 19px;
+  border-radius: 9px;
+  color: #4f46e5;
+  background: #e0e7ff;
+  cursor: pointer;
+}
+
+.nh-submit {
+  width: 100%;
+  border: 0;
+  border-radius: 11px;
+  padding: 15px;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: white;
+  font-weight: 700;
+}
+
+.nh-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px #4f46e533;
+}
+
+.nh-submit:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.nh-upload-sidebar {
+  display: grid;
+  gap: 18px;
+}
+
+.nh-tip-card {
+  padding: 25px;
+}
+
+.nh-tip-card h3 {
+  font-size: 17px;
+  margin: 17px 0 8px;
+}
+
+.nh-tip-card p {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.8;
+}
+
+.nh-dashboard-link {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: #4f46e5;
+  font-weight: 700;
+}
+
+.nh-alert {
+  padding: 13px 16px;
+  border-radius: 9px;
+  margin-bottom: 20px;
+}
+
+.nh-error {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.nh-success {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+@media (max-width: 850px) {
+  .nh-upload-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .nh-upload-card {
+    padding: 22px;
+  }
+
+  .nh-field-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
