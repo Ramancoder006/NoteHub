@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
+import API_URL from "../api";
 import "./Upload.css";
 
 export default function UploadNotes() {
@@ -21,11 +22,15 @@ export default function UploadNotes() {
   const [success, setSuccess] = useState("");
 
   const update = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm((previous) => ({
+      ...previous,
+      [e.target.name]: e.target.value,
+    }));
   };
 
   const selectFile = (selected) => {
     setError("");
+    setSuccess("");
 
     if (!selected) return;
 
@@ -33,11 +38,13 @@ export default function UploadNotes() {
       selected.type !== "application/pdf" ||
       !selected.name.toLowerCase().endsWith(".pdf")
     ) {
+      setFile(null);
       setError("Only PDF files are allowed.");
       return;
     }
 
     if (selected.size > 10 * 1024 * 1024) {
+      setFile(null);
       setError("Maximum file size is 10 MB.");
       return;
     }
@@ -58,16 +65,20 @@ export default function UploadNotes() {
     setLoading(true);
 
     try {
+      // Get the currently logged-in user session.
       const { data, error: authError } =
         await supabase.auth.getSession();
 
-      if (authError) throw authError;
+      if (authError) {
+        throw authError;
+      }
 
       if (!data.session) {
         navigate("/login");
         return;
       }
 
+      // Prepare the upload data.
       const body = new FormData();
 
       Object.entries(form).forEach(([key, value]) => {
@@ -76,8 +87,9 @@ export default function UploadNotes() {
 
       body.append("file", file);
 
+      // Upload PDF to FastAPI backend hosted on Render.
       const response = await fetch(
-        "http://127.0.0.1:8000/upload-note",
+        `${API_URL}/upload-note`,
         {
           method: "POST",
           headers: {
@@ -87,14 +99,20 @@ export default function UploadNotes() {
         }
       );
 
+      // Handle API response.
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.detail || "Upload failed.");
+        throw new Error(
+          typeof result.detail === "string"
+            ? result.detail
+            : "Upload failed. Please try again."
+        );
       }
 
       setSuccess("Your notes were uploaded successfully!");
 
+      // Reset form after successful upload.
       setForm({
         title: "",
         subject: "",
@@ -103,8 +121,19 @@ export default function UploadNotes() {
       });
 
       setFile(null);
+
+      const fileInput = document.getElementById("note-pdf");
+
+      if (fileInput) {
+        fileInput.value = "";
+      }
     } catch (err) {
-      setError(err.message || "Something went wrong.");
+      console.error("Upload error:", err);
+
+      setError(
+        err.message ||
+          "Something went wrong while uploading."
+      );
     } finally {
       setLoading(false);
     }
@@ -114,8 +143,12 @@ export default function UploadNotes() {
     <main className="nh-upload-page">
       <div className="nh-upload-container">
         <header className="nh-upload-heading">
-          <span className="nh-eyebrow">CONTRIBUTE TO NOTEHUB</span>
+          <span className="nh-eyebrow">
+            CONTRIBUTE TO NOTEHUB
+          </span>
+
           <h1>Share your knowledge.</h1>
+
           <p>
             Upload your study materials and help other
             students learn and succeed.
@@ -125,7 +158,10 @@ export default function UploadNotes() {
         <div className="nh-upload-layout">
           <section className="nh-upload-card">
             <div className="nh-card-heading">
-              <div className="nh-heading-icon">📄</div>
+              <div className="nh-heading-icon">
+                📄
+              </div>
+
               <div>
                 <h2>Upload Study Notes</h2>
                 <p>Fill in the details below.</p>
@@ -133,20 +169,29 @@ export default function UploadNotes() {
             </div>
 
             {error && (
-              <div className="nh-alert nh-error" role="alert">
+              <div
+                className="nh-alert nh-error"
+                role="alert"
+              >
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="nh-alert nh-success" role="status">
+              <div
+                className="nh-alert nh-success"
+                role="status"
+              >
                 {success}
               </div>
             )}
 
             <form onSubmit={handleSubmit}>
               <div className="nh-field">
-                <label htmlFor="note-title">Note Title</label>
+                <label htmlFor="note-title">
+                  Note Title
+                </label>
+
                 <input
                   id="note-title"
                   name="title"
@@ -159,7 +204,10 @@ export default function UploadNotes() {
 
               <div className="nh-field-row">
                 <div className="nh-field">
-                  <label htmlFor="note-subject">Subject</label>
+                  <label htmlFor="note-subject">
+                    Subject
+                  </label>
+
                   <input
                     id="note-subject"
                     name="subject"
@@ -171,7 +219,10 @@ export default function UploadNotes() {
                 </div>
 
                 <div className="nh-field">
-                  <label htmlFor="note-semester">Semester</label>
+                  <label htmlFor="note-semester">
+                    Semester
+                  </label>
+
                   <select
                     id="note-semester"
                     name="semester"
@@ -179,12 +230,21 @@ export default function UploadNotes() {
                     onChange={update}
                     required
                   >
-                    <option value="">Select Semester</option>
-                    {Array.from({ length: 8 }, (_, i) => (
-                      <option key={i + 1} value={i + 1}>
-                        Semester {i + 1}
-                      </option>
-                    ))}
+                    <option value="">
+                      Select Semester
+                    </option>
+
+                    {Array.from(
+                      { length: 8 },
+                      (_, i) => (
+                        <option
+                          key={i + 1}
+                          value={i + 1}
+                        >
+                          Semester {i + 1}
+                        </option>
+                      )
+                    )}
                   </select>
                 </div>
               </div>
@@ -193,6 +253,7 @@ export default function UploadNotes() {
                 <label htmlFor="note-description">
                   Description
                 </label>
+
                 <textarea
                   id="note-description"
                   name="description"
@@ -205,7 +266,9 @@ export default function UploadNotes() {
               </div>
 
               <div className="nh-field">
-                <label>Upload PDF</label>
+                <label htmlFor="note-pdf">
+                  Upload PDF
+                </label>
 
                 <div
                   className={`nh-dropzone ${
@@ -222,10 +285,15 @@ export default function UploadNotes() {
                   onDrop={(e) => {
                     e.preventDefault();
                     setDragging(false);
-                    selectFile(e.dataTransfer.files[0]);
+
+                    selectFile(
+                      e.dataTransfer.files[0]
+                    );
                   }}
                 >
-                  <div className="nh-drop-icon">☁️</div>
+                  <div className="nh-drop-icon">
+                    ☁️
+                  </div>
 
                   <h3>
                     {file
@@ -235,7 +303,11 @@ export default function UploadNotes() {
 
                   <p>
                     {file
-                      ? `${(file.size / 1024 / 1024).toFixed(2)} MB`
+                      ? `${(
+                          file.size /
+                          1024 /
+                          1024
+                        ).toFixed(2)} MB`
                       : "PDF format only • Maximum 10 MB"}
                   </p>
 
@@ -243,7 +315,9 @@ export default function UploadNotes() {
                     className="nh-file-picker"
                     htmlFor="note-pdf"
                   >
-                    {file ? "Change PDF" : "Choose PDF"}
+                    {file
+                      ? "Change PDF"
+                      : "Choose PDF"}
                   </label>
 
                   <input
@@ -251,7 +325,9 @@ export default function UploadNotes() {
                     type="file"
                     accept=".pdf,application/pdf"
                     onChange={(e) =>
-                      selectFile(e.target.files[0])
+                      selectFile(
+                        e.target.files[0]
+                      )
                     }
                     hidden
                   />
@@ -272,34 +348,51 @@ export default function UploadNotes() {
 
           <aside className="nh-upload-sidebar">
             <div className="nh-tip-card">
-              <div className="nh-tip-icon">✨</div>
+              <div className="nh-tip-icon">
+                ✨
+              </div>
+
               <h3>Make your notes stand out</h3>
+
               <p>
-                A descriptive title and subject make it
-                easier for students to discover your work.
+                A descriptive title and subject
+                make it easier for students to
+                discover your work.
               </p>
             </div>
 
             <div className="nh-tip-card">
-              <div className="nh-tip-icon">🛡️</div>
+              <div className="nh-tip-icon">
+                🛡️
+              </div>
+
               <h3>Upload responsibly</h3>
+
               <p>
-                Share clear, useful PDF materials that
-                you have permission to distribute.
+                Share clear, useful PDF materials
+                that you have permission to
+                distribute.
               </p>
             </div>
 
             <div className="nh-tip-card">
-              <div className="nh-tip-icon">📊</div>
+              <div className="nh-tip-icon">
+                📊
+              </div>
+
               <h3>Track your contributions</h3>
+
               <p>
-                Visit your Dashboard to see your uploads
-                and their view counts.
+                Visit your Dashboard to see
+                your uploads and their view counts.
               </p>
+
               <button
                 type="button"
                 className="nh-dashboard-link"
-                onClick={() => navigate("/dashboard")}
+                onClick={() =>
+                  navigate("/dashboard")
+                }
               >
                 Go to Dashboard →
               </button>

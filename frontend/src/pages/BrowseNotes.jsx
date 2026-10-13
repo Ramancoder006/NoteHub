@@ -1,5 +1,7 @@
+
 import { useEffect, useMemo, useState } from "react";
 import "./BrowseNotes.css";
+import API_URL from "../api";
 
 function BrowseNotes() {
   const [notes, setNotes] = useState([]);
@@ -11,7 +13,7 @@ function BrowseNotes() {
   const [subject, setSubject] = useState("");
 
   // ==========================================
-  // LOAD NOTES
+  // LOAD NOTES FROM RENDER BACKEND
   // ==========================================
 
   useEffect(() => {
@@ -24,7 +26,7 @@ function BrowseNotes() {
       setError("");
 
       const response = await fetch(
-        "http://127.0.0.1:8000/notes"
+        `${API_URL}/notes`
       );
 
       const result = await response.json();
@@ -38,7 +40,10 @@ function BrowseNotes() {
       setNotes(Array.isArray(result) ? result : []);
     } catch (err) {
       console.error("Fetch notes error:", err);
-      setError(err.message || "Unable to load notes.");
+
+      setError(
+        err.message || "Unable to load notes."
+      );
     } finally {
       setLoading(false);
     }
@@ -65,7 +70,11 @@ function BrowseNotes() {
 
     return notes.filter((note) => {
       const title = (note.title || "").toLowerCase();
-      const noteSubject = (note.subject || "").toLowerCase();
+
+      const noteSubject = (
+        note.subject || ""
+      ).toLowerCase();
+
       const description = (
         note.description || ""
       ).toLowerCase();
@@ -108,7 +117,7 @@ function BrowseNotes() {
     subject !== "";
 
   // ==========================================
-  // VIEW NOTE + DOWNLOAD COUNT
+  // VIEW NOTE + UPDATE DOWNLOAD COUNT
   // ==========================================
 
   const handleViewNote = async (note) => {
@@ -117,9 +126,17 @@ function BrowseNotes() {
       return;
     }
 
+    // Open immediately so browser popup blockers
+    // do not prevent the PDF from opening.
+    const pdfWindow = window.open(
+      note.file_url,
+      "_blank",
+      "noopener,noreferrer"
+    );
+
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/notes/${note.id}/download`,
+        `${API_URL}/notes/${note.id}/download`,
         {
           method: "POST",
         }
@@ -144,26 +161,13 @@ function BrowseNotes() {
             : currentNote
         )
       );
-
-      window.open(
-        note.file_url,
-        "_blank",
-        "noopener,noreferrer"
-      );
     } catch (err) {
       console.error("Download count error:", err);
-
-      // PDF should still open if counter fails
-      window.open(
-        note.file_url,
-        "_blank",
-        "noopener,noreferrer"
-      );
     }
   };
 
   // ==========================================
-  // LOADING
+  // LOADING SCREEN
   // ==========================================
 
   if (loading) {
@@ -187,19 +191,16 @@ function BrowseNotes() {
   }
 
   // ==========================================
-  // PAGE
+  // BROWSE NOTES PAGE
   // ==========================================
 
   return (
     <div className="browse-page">
-
       {/* HEADER */}
 
       <section className="browse-hero">
         <div className="browse-container">
-
           <div className="browse-hero-content">
-
             <div>
               <span className="browse-tag">
                 📚 STUDY RESOURCES
@@ -227,30 +228,24 @@ function BrowseNotes() {
                 <span>Notes available</span>
               </div>
             </div>
-
           </div>
         </div>
       </section>
 
-
       <div className="browse-container browse-main">
-
         {/* ERROR */}
 
         {error && (
-          <div className="browse-error">
+          <div className="browse-error" role="alert">
             <span>⚠️</span>
             {error}
           </div>
         )}
 
-
         {/* SEARCH / FILTER CARD */}
 
         <div className="browse-filter-card">
-
           <div className="modern-search">
-
             <span className="modern-search-icon">
               🔍
             </span>
@@ -273,14 +268,10 @@ function BrowseNotes() {
                 ×
               </button>
             )}
-
           </div>
 
-
           <div className="modern-filter-row">
-
             <div className="filter-select-group">
-
               <span>🎓</span>
 
               <select
@@ -302,12 +293,9 @@ function BrowseNotes() {
                 <option value="7">Semester 7</option>
                 <option value="8">Semester 8</option>
               </select>
-
             </div>
 
-
             <div className="filter-select-group">
-
               <span>📖</span>
 
               <select
@@ -329,28 +317,23 @@ function BrowseNotes() {
                   </option>
                 ))}
               </select>
-
             </div>
-
 
             {filtersActive && (
               <button
                 className="modern-clear-button"
                 onClick={clearFilters}
+                type="button"
               >
                 × Clear filters
               </button>
             )}
-
           </div>
-
         </div>
-
 
         {/* RESULTS HEADER */}
 
         <div className="browse-results-header">
-
           <div>
             <h2>Study Notes</h2>
 
@@ -370,16 +353,12 @@ function BrowseNotes() {
               Filters applied
             </span>
           )}
-
         </div>
-
 
         {/* NO RESULTS */}
 
         {filteredNotes.length === 0 ? (
-
           <div className="modern-empty-state">
-
             <div className="empty-search-icon">
               🔎
             </div>
@@ -391,33 +370,28 @@ function BrowseNotes() {
               your current search and filters.
             </p>
 
-            <button onClick={clearFilters}>
+            <button
+              type="button"
+              onClick={clearFilters}
+            >
               Clear all filters
             </button>
-
           </div>
-
         ) : (
-
           // NOTES GRID
 
           <div className="modern-notes-grid">
-
             {filteredNotes.map((note) => (
-
               <article
                 className="modern-note-card"
                 key={note.id}
               >
-
                 <div className="modern-card-header">
-
                   <div className="document-icon">
                     📄
                   </div>
 
                   <div className="card-badges">
-
                     <span className="pdf-badge-new">
                       PDF
                     </span>
@@ -425,14 +399,10 @@ function BrowseNotes() {
                     <span className="semester-badge-new">
                       Sem {note.semester}
                     </span>
-
                   </div>
-
                 </div>
 
-
                 <div className="modern-card-body">
-
                   <span className="modern-subject">
                     {note.subject ||
                       "Study Material"}
@@ -444,12 +414,9 @@ function BrowseNotes() {
                     {note.description ||
                       "Study material shared on NoteHub."}
                   </p>
-
                 </div>
 
-
                 <div className="modern-uploader">
-
                   <div className="small-avatar">
                     {(note.uploader || "S")
                       .charAt(0)
@@ -463,12 +430,9 @@ function BrowseNotes() {
                       {note.uploader || "Student"}
                     </strong>
                   </div>
-
                 </div>
 
-
                 <div className="modern-card-footer">
-
                   <div className="download-info">
                     <span>↓</span>
 
@@ -481,9 +445,9 @@ function BrowseNotes() {
                     </div>
                   </div>
 
-
                   <button
                     className="view-note-button"
+                    type="button"
                     onClick={() =>
                       handleViewNote(note)
                     }
@@ -491,16 +455,11 @@ function BrowseNotes() {
                     View Notes
                     <span>→</span>
                   </button>
-
                 </div>
-
               </article>
-
             ))}
-
           </div>
         )}
-
       </div>
     </div>
   );

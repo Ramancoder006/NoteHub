@@ -1,6 +1,8 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
+import API_URL from "../api";
 import "./Dashboard.css";
 
 function Dashboard() {
@@ -36,7 +38,7 @@ function Dashboard() {
         throw sessionError;
       }
 
-      // User is not logged in
+      // Redirect if not logged in
       if (!session) {
         navigate("/login");
         return;
@@ -44,12 +46,11 @@ function Dashboard() {
 
       setUser(session.user);
 
-      // Request user's notes from FastAPI
+      // Fetch user's notes from Render FastAPI backend
       const response = await fetch(
-        "http://127.0.0.1:8000/my-notes",
+        `${API_URL}/my-notes`,
         {
           method: "GET",
-
           headers: {
             Authorization: `Bearer ${session.access_token}`,
           },
@@ -60,13 +61,15 @@ function Dashboard() {
 
       if (!response.ok) {
         throw new Error(
-          result.detail || "Unable to load your notes."
+          typeof result.detail === "string"
+            ? result.detail
+            : "Unable to load your notes."
         );
       }
 
       setNotes(result);
     } catch (err) {
-      console.error(err);
+      console.error("Dashboard loading error:", err);
 
       setError(
         err.message || "Unable to load dashboard."
@@ -96,18 +99,23 @@ function Dashboard() {
 
       const {
         data: { session },
+        error: sessionError,
       } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        throw sessionError;
+      }
 
       if (!session) {
         navigate("/login");
         return;
       }
 
+      // Delete note through Render backend
       const response = await fetch(
-        `http://127.0.0.1:8000/my-notes/${noteId}`,
+        `${API_URL}/my-notes/${noteId}`,
         {
           method: "DELETE",
-
           headers: {
             Authorization: `Bearer ${session.access_token}`,
           },
@@ -118,11 +126,13 @@ function Dashboard() {
 
       if (!response.ok) {
         throw new Error(
-          result.detail || "Unable to delete note."
+          typeof result.detail === "string"
+            ? result.detail
+            : "Unable to delete note."
         );
       }
 
-      // Remove deleted note from screen
+      // Remove deleted note from dashboard
       setNotes((previousNotes) =>
         previousNotes.filter(
           (note) => note.id !== noteId
@@ -131,7 +141,7 @@ function Dashboard() {
 
       setMessage("Note deleted successfully!");
     } catch (err) {
-      console.error(err);
+      console.error("Delete error:", err);
 
       setError(
         err.message || "Unable to delete note."
@@ -180,11 +190,8 @@ function Dashboard() {
 
   return (
     <div className="dashboard-page">
-
       <div className="dashboard-container">
-
         <div className="dashboard-header">
-
           <div>
             <h1>Student Dashboard</h1>
 
@@ -205,29 +212,31 @@ function Dashboard() {
           >
             + Upload Notes
           </button>
-
         </div>
 
         {message && (
-          <div className="dashboard-success">
+          <div
+            className="dashboard-success"
+            role="status"
+          >
             {message}
           </div>
         )}
 
         {error && (
-          <div className="dashboard-error">
+          <div
+            className="dashboard-error"
+            role="alert"
+          >
             {error}
           </div>
         )}
 
         <div className="dashboard-stats">
-
           <div className="stat-card">
             <span>Total Notes</span>
 
-            <strong>
-              {notes.length}
-            </strong>
+            <strong>{notes.length}</strong>
           </div>
 
           <div className="stat-card">
@@ -236,34 +245,25 @@ function Dashboard() {
             <strong>
               {notes.reduce(
                 (total, note) =>
-                  total + (note.downloads || 0),
+                  total + Number(note.downloads || 0),
                 0
               )}
             </strong>
           </div>
-
         </div>
 
         <div className="dashboard-section-header">
-
           <h2>My Uploaded Notes</h2>
 
           <span>
             {notes.length}{" "}
-            {notes.length === 1
-              ? "note"
-              : "notes"}
+            {notes.length === 1 ? "note" : "notes"}
           </span>
-
         </div>
 
         {notes.length === 0 ? (
-
           <div className="empty-dashboard">
-
-            <div className="empty-icon">
-              📚
-            </div>
+            <div className="empty-icon">📚</div>
 
             <h2>No notes uploaded yet</h2>
 
@@ -277,22 +277,15 @@ function Dashboard() {
             >
               Upload Your First Note
             </button>
-
           </div>
-
         ) : (
-
           <div className="dashboard-grid">
-
             {notes.map((note) => (
-
               <div
                 className="dashboard-note-card"
                 key={note.id}
               >
-
                 <div className="dashboard-card-top">
-
                   <span className="pdf-badge">
                     PDF
                   </span>
@@ -300,12 +293,9 @@ function Dashboard() {
                   <span className="semester-badge">
                     Semester {note.semester}
                   </span>
-
                 </div>
 
-                <h3>
-                  {note.title}
-                </h3>
+                <h3>{note.title}</h3>
 
                 <p className="dashboard-subject">
                   {note.subject}
@@ -316,15 +306,12 @@ function Dashboard() {
                 </p>
 
                 <div className="dashboard-note-info">
-
                   <span>
                     ↓ {note.downloads || 0} downloads
                   </span>
-
                 </div>
 
                 <div className="dashboard-card-actions">
-
                   <button
                     className="view-button"
                     onClick={() =>
@@ -336,9 +323,7 @@ function Dashboard() {
 
                   <button
                     className="delete-button"
-                    disabled={
-                      deletingId === note.id
-                    }
+                    disabled={deletingId === note.id}
                     onClick={() =>
                       handleDelete(note.id)
                     }
@@ -347,19 +332,12 @@ function Dashboard() {
                       ? "Deleting..."
                       : "Delete"}
                   </button>
-
                 </div>
-
               </div>
-
             ))}
-
           </div>
-
         )}
-
       </div>
-
     </div>
   );
 }
